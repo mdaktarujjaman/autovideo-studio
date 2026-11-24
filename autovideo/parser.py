@@ -1,14 +1,18 @@
 import re
 from pathlib import Path
 
-SCENE_KEYS = {"image", "type", "value", "label", "items", "icon", "say"}
+SCENE_KEYS = {"image", "type", "value", "label", "items", "icon", "say", "audio"}
 
 DEFAULTS = {
+    "provider": "edge",
     "voice": "bn-BD-NabanitaNeural",
-    "font": "assets/fonts/NotoSansBengali.ttf",
-    "music": "",
     "rate": "-5%",
     "pitch": "+0Hz",
+    "gemini_voice": "Sulafat",
+    "style": "Read this in natural, warm, conversational Bangla, like a friendly presenter",
+    "tts_model": "gemini-2.5-flash-preview-tts",
+    "font": "assets/fonts/NotoSansBengali.ttf",
+    "music": "",
     "fps": "24",
 }
 
@@ -20,6 +24,7 @@ SCENE_DEFAULTS = {
     "items": "",
     "icon": "person",
     "say": "",
+    "audio": "",
 }
 
 
