@@ -23,7 +23,7 @@ def background(scene, index):
     return f"radial-gradient(circle at 50% 35%, {top}, {bottom})", False
 
 
-def render_scenes(scenes, durations, size, font_path, fps):
+def render_scenes(scenes, durations, size, font_path, fps, progress=None):
     width, height = size
     template = TEMPLATE.read_text(encoding="utf-8")
     font_uri = Path(font_path).resolve().as_uri()
@@ -61,7 +61,8 @@ def render_scenes(scenes, durations, size, font_path, fps):
 
             paths += [paths[-1]] * (total - animated)
             sequences.append(paths)
-            print(f"scene {index + 1}/{len(scenes)} rendered")
+            if progress:
+                progress(index + 1, len(scenes))
 
         browser.close()
 
