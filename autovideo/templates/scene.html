@@ -11,7 +11,9 @@ body {
   flex-direction: column;
   font-family: "Main", sans-serif;
   color: #fff;
+  background: #000;
 }
+.bg { position: absolute; inset: 0; z-index: 0; }
 .dim { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.5); }
 .stage {
   position: relative;
@@ -99,6 +101,16 @@ body {
   text-align: center;
   text-wrap: balance;
 }
+.track, .bar {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 1vmin;
+  z-index: 2;
+}
+.track { background: rgba(255, 255, 255, 0.14); }
+.bar { background: #f5c542; transform-origin: left center; }
 body::after {
   content: "";
   position: absolute;
@@ -108,7 +120,6 @@ body::after {
   opacity: 0.06;
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
 }
-
 @media (orientation: landscape) {
   .caption-wrap { margin-bottom: 8vmin; }
 }
@@ -118,11 +129,16 @@ body::after {
 <div class="dim" id="dim"></div>
 <div class="stage" id="stage"></div>
 <div class="caption-wrap" id="captionWrap"></div>
+<div class="track"></div>
+<div class="bar" id="bar"></div>
 <script>
 const S = __SCENE__;
 const BN = "০১২৩৪৫৬৭৮৯";
 const PERSON = '<svg viewBox="0 0 40 70"><circle cx="20" cy="14" r="11" fill="#c9a064"/><rect x="6" y="28" width="28" height="42" rx="10" fill="#d9b27a"/></svg>';
 const DOT = '<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" fill="#f5c542"/></svg>';
+
+const ms = (S.duration || 5) * 1000;
+const idle = [];
 
 const toBn = n => String(n).replace(/\d/g, d => BN[d]);
 
@@ -133,14 +149,43 @@ function el(tag, cls, text) {
   return node;
 }
 
-document.body.style.background = S.bg;
+const bg = el("div", "bg");
+bg.style.background = S.bg;
+document.body.prepend(bg);
+idle.push(
+  bg.animate(
+    [{ transform: "scale(1)" }, { transform: "scale(1.08)" }],
+    { duration: ms, easing: "linear", fill: "both" }
+  )
+);
+
 document.getElementById("dim").style.display = S.dim ? "block" : "none";
 
 const stage = document.getElementById("stage");
+idle.push(
+  stage.animate(
+    [{ transform: "translateY(-0.8vmin)" }, { transform: "translateY(0.8vmin)" }],
+    { duration: 4000, iterations: Infinity, direction: "alternate", easing: "ease-in-out" }
+  )
+);
+
+const bar = document.getElementById("bar");
+idle.push(
+  bar.animate(
+    [
+      { transform: `scaleX(${S.progressFrom})` },
+      { transform: `scaleX(${S.progressTo})` },
+    ],
+    { duration: ms, easing: "linear", fill: "both" }
+  )
+);
+
 let counter = null;
+let countMs = 0;
 const target = parseInt(S.value, 10) || 0;
 
 if (S.type === "counter") {
+  countMs = Math.min(3000, Math.max(1200, ms * 0.4));
   const badge = el("div", "badge anim");
   counter = el("span", "num", toBn(0));
   badge.append(counter, el("span", "lab", S.label));
@@ -149,9 +194,11 @@ if (S.type === "counter") {
   if (S.icon !== "none") {
     const icons = el("div", "icons");
     const count = Math.min(target, 40);
+    const span = Math.max(700, ms * 0.5);
+    const gap = Math.min(90, span / Math.max(count, 1));
     for (let i = 0; i < count; i++) {
       const icon = el("div", "icon pop");
-      icon.style.animationDelay = (700 + i * 70) + "ms";
+      icon.style.animationDelay = (700 + i * gap) + "ms";
       icon.innerHTML = S.icon === "dot" ? DOT : PERSON;
       icons.append(icon);
     }
@@ -159,9 +206,11 @@ if (S.type === "counter") {
   }
 } else if (S.type === "bullets") {
   const list = el("div", "items");
-  S.items.split("|").forEach((text, i) => {
-    const item = el("div", "item anim", text.trim());
-    item.style.animationDelay = (300 + i * 600) + "ms";
+  const texts = S.items.split("|").map(t => t.trim()).filter(Boolean);
+  const step = Math.max(600 * texts.length, ms * 0.6) / texts.length;
+  texts.forEach((text, i) => {
+    const item = el("div", "item anim", text);
+    item.style.animationDelay = (300 + i * step) + "ms";
     list.append(item);
   });
   stage.append(list);
@@ -173,18 +222,26 @@ if (S.type !== "text") {
   document.getElementById("captionWrap").append(el("div", "caption anim", S.text));
 }
 
-window.onSeek = ms => {
+window.activeUntil = Math.max(
+  counter ? 300 + countMs : 0,
+  ...document
+    .getAnimations()
+    .filter(a => !idle.includes(a))
+    .map(a => a.effect.getComputedTiming().endTime)
+);
+
+window.onSeek = t => {
   if (!counter) return;
-  const progress = Math.min(1, Math.max(0, (ms - 300) / 1200));
+  const progress = Math.min(1, Math.max(0, (t - 300) / countMs));
   counter.textContent = toBn(Math.round(target * progress));
 };
 
-window.seek = ms => {
+window.seek = t => {
   document.getAnimations().forEach(a => {
     a.pause();
-    a.currentTime = ms;
+    a.currentTime = t;
   });
-  window.onSeek(ms);
+  window.onSeek(t);
 };
 
 window.seek(0);

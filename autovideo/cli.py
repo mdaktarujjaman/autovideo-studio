@@ -1,4 +1,5 @@
 import argparse
+import time
 from pathlib import Path
 
 from .lexicon import load_lexicon
@@ -49,7 +50,9 @@ def main(argv=None):
     if args.check:
         return 0
 
+    started = time.time()
     results = render_script(args.script, args.format, args.output_dir, _progress)
+    print(f"render time: {(time.time() - started) / 60:.1f} min")
     for name, path in results.items():
         print(f"saved ({name}): {path}")
     return 0

@@ -12,7 +12,7 @@ PALETTE = [
 ]
 
 TEMPLATE = Path(__file__).parent / "templates" / "scene.html"
-ANIM_SECONDS = 5.0
+IDLE_FPS = 8
 
 
 def background(scene, index):
@@ -32,13 +32,29 @@ def render_scenes(scenes, durations, size, font_path, fps, progress=None):
     shutil.rmtree(frames_root, ignore_errors=True)
     sequences = []
 
+    total_length = sum(durations)
+    elapsed = 0.0
+    step = max(1, round(fps / IDLE_FPS))
+
     with sync_playwright() as p:
         browser = p.chromium.launch()
         page = browser.new_page(viewport={"width": width, "height": height})
 
         for index, (scene, duration) in enumerate(zip(scenes, durations)):
             bg, dim = background(scene, index)
-            data = json.dumps({**scene, "bg": bg, "dim": dim}, ensure_ascii=False)
+            data = json.dumps(
+                {
+                    **scene,
+                    "bg": bg,
+                    "dim": dim,
+                    "duration": duration,
+                    "progressFrom": elapsed / total_length,
+                    "progressTo": (elapsed + duration) / total_length,
+                },
+                ensure_ascii=False,
+            )
+            elapsed += duration
+
             html = template.replace("__FONT__", font_uri).replace(
                 "__SCENE__", data.replace("</", "<\\/")
             )
@@ -47,19 +63,21 @@ def render_scenes(scenes, durations, size, font_path, fps, progress=None):
             page.goto(page_file.resolve().as_uri())
             page.evaluate("document.fonts.ready")
 
+            active_ms = page.evaluate("window.activeUntil")
             total = max(1, int(duration * fps))
-            animated = min(total, int(ANIM_SECONDS * fps))
+            full = min(total, int(active_ms * fps / 1000) + 1)
+
             folder = frames_root / f"scene_{index}"
             folder.mkdir(parents=True, exist_ok=True)
 
-            paths = []
-            for n in range(animated):
-                page.evaluate(f"seek({n * 1000 / fps})")
-                path = folder / f"{n:05d}.jpg"
-                page.screenshot(path=str(path), type="jpeg", quality=92)
-                paths.append(str(path))
+            paths, last = [], None
+            for n in range(total):
+                if n < full or (n - full) % step == 0:
+                    page.evaluate(f"seek({n * 1000 / fps})")
+                    last = folder / f"{n:05d}.jpg"
+                    page.screenshot(path=str(last), type="jpeg", quality=92)
+                paths.append(str(last))
 
-            paths += [paths[-1]] * (total - animated)
             sequences.append(paths)
             if progress:
                 progress(index + 1, len(scenes))
