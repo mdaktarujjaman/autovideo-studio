@@ -13,6 +13,7 @@ DEFAULTS = {
     "tts_model": "gemini-2.5-flash-preview-tts",
     "font": "assets/fonts/NotoSansBengali.ttf",
     "music": "",
+    "lexicon": "lexicon.json",
     "fps": "24",
 }
 

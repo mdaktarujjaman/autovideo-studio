@@ -1,6 +1,10 @@
+import json
 import re
 from dataclasses import dataclass
 from pathlib import Path
+
+from .lexicon import load_lexicon
+from .speech import prepare_speech
 
 TYPES = {"text", "counter", "bullets"}
 PROVIDERS = {"edge", "gemini"}
@@ -54,6 +58,12 @@ def validate(config, scenes):
     if config["music"] and not Path(config["music"]).exists():
         add("error", 0, f"music file not found: {config['music']}")
 
+    try:
+        lexicon = load_lexicon(config.get("lexicon", ""))
+    except (json.JSONDecodeError, AttributeError):
+        add("error", 0, f"lexicon file is not valid JSON: {config['lexicon']}")
+        lexicon = {}
+
     previous, run = None, 0
     for number, scene in enumerate(scenes, start=1):
         kind = scene["type"]
@@ -84,10 +94,12 @@ def validate(config, scenes):
         word_count = len(text.split())
         if word_count > MAX_WORDS:
             add("warning", number, f"voiceover has {word_count} words, split the scene")
-        if re.search(r"[0-9\u09e6-\u09ef]", text):
-            add("warning", number, "digits in voiceover, write numbers in words")
-        if re.search(r"[A-Za-z]", text):
-            add("warning", number, "English letters in voiceover, use @say with Bangla spelling")
+
+        if not scene["audio"]:
+            prepared = prepare_speech(text, lexicon)
+            leftover = sorted(set(re.findall(r"[A-Za-z][A-Za-z0-9]*", prepared)))
+            if leftover:
+                add("warning", number, "add to lexicon.json: " + ", ".join(leftover))
 
         for key in ("audio", "image"):
             if scene[key] and not Path(scene[key]).exists():

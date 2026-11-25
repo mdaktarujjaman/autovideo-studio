@@ -3,8 +3,10 @@ from pathlib import Path
 from moviepy.editor import AudioFileClip
 
 from .compose import build_video
+from .lexicon import load_lexicon
 from .parser import parse
 from .render import render_scenes
+from .speech import prepare_speech
 from .validator import validate
 from .voice import synthesize
 
@@ -18,10 +20,11 @@ class ScriptError(Exception):
         super().__init__("\n".join(str(issue) for issue in issues))
 
 
-def voice_for(scene, config):
+def voice_for(scene, config, lexicon):
     if scene["audio"]:
         return Path(scene["audio"])
-    return synthesize(scene["say"] or scene["text"], config)
+    text = prepare_speech(scene["say"] or scene["text"], lexicon)
+    return synthesize(text, config)
 
 
 def render_script(script_path, mode="portrait", output_dir="output", progress=None):
@@ -35,13 +38,15 @@ def render_script(script_path, mode="portrait", output_dir="output", progress=No
     if any(issue.level == "error" for issue in issues):
         raise ScriptError(issues)
 
+    lexicon = load_lexicon(config["lexicon"])
+
     Path("build").mkdir(exist_ok=True)
     target_dir = Path(output_dir)
     target_dir.mkdir(parents=True, exist_ok=True)
 
     voices = []
     for index, scene in enumerate(scenes):
-        voices.append(voice_for(scene, config))
+        voices.append(voice_for(scene, config, lexicon))
         notify("voice", index + 1, len(scenes))
 
     durations = []
