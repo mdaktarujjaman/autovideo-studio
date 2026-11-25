@@ -14,6 +14,14 @@ import imageio_ffmpeg
 
 PAUSE = 0.28
 GEMINI_GAP = 6.5
+CACHE_VERSION = 3
+
+TRIM = (
+    "silenceremove=start_periods=1:start_silence=0.2:start_threshold=-50dB,"
+    "areverse,"
+    "silenceremove=start_periods=1:start_silence=0.12:start_threshold=-50dB,"
+    "areverse"
+)
 
 
 async def _save(text, voice, rate, pitch, path):
@@ -24,6 +32,14 @@ async def _save(text, voice, rate, pitch, path):
 def _sentences(text):
     parts = re.split(r"(?<=[।?!])\s+", text.strip())
     return [part for part in parts if part]
+
+
+def _ffmpeg(args):
+    subprocess.run(
+        [imageio_ffmpeg.get_ffmpeg_exe(), "-y", *args],
+        check=True,
+        capture_output=True,
+    )
 
 
 def _join(parts, output):
@@ -40,13 +56,13 @@ def _join(parts, output):
 
     graph = ";".join(chains) + ";" + "".join(labels)
     graph += f"concat=n={len(parts)}:v=0:a=1[out]"
+    _ffmpeg([*inputs, "-filter_complex", graph, "-map", "[out]", str(output)])
 
-    subprocess.run(
-        [imageio_ffmpeg.get_ffmpeg_exe(), "-y", *inputs,
-         "-filter_complex", graph, "-map", "[out]", str(output)],
-        check=True,
-        capture_output=True,
-    )
+
+def _trim(path):
+    temp = path.with_name(f"{path.stem}_trim{path.suffix}")
+    _ffmpeg(["-i", str(path), "-af", TRIM, str(temp)])
+    temp.replace(path)
 
 
 def _edge(text, config, path):
@@ -113,7 +129,7 @@ def _gemini(text, config, path):
 
 def synthesize(text, config, folder="build/voice_cache"):
     provider = config["provider"]
-    fields = [provider, text]
+    fields = [CACHE_VERSION, provider, text]
     if provider == "gemini":
         fields += [config["gemini_voice"], config["style"], config["tts_model"]]
     else:
@@ -129,4 +145,5 @@ def synthesize(text, config, folder="build/voice_cache"):
         _gemini(text, config, path)
     else:
         _edge(text, config, path)
+    _trim(path)
     return path

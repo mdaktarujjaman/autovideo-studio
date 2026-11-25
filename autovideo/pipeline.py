@@ -10,7 +10,7 @@ from .speech import prepare_speech
 from .validator import validate
 from .voice import synthesize
 
-PAD = 0.6
+PAD = 0.3
 SIZES = {"portrait": (1080, 1920), "landscape": (1920, 1080)}
 
 
