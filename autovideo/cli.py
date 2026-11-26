@@ -4,7 +4,8 @@ from pathlib import Path
 
 from .lexicon import load_lexicon
 from .parser import parse
-from .pipeline import SIZES, render_script
+from .pipeline import SIZES, parse_selection, render_script
+from .render import default_workers
 from .speech import prepare_speech
 from .validator import estimate_seconds, validate
 
@@ -20,6 +21,15 @@ def main(argv=None):
     parser.add_argument("script", help="path to the script file")
     parser.add_argument("-f", "--format", choices=[*SIZES, "both"], default="portrait")
     parser.add_argument("-o", "--output-dir", default="output")
+    parser.add_argument("--scenes", default="", help="scene numbers to render, e.g. 5-8 or 1,3-4")
+    parser.add_argument("--draft", action="store_true", help="fast low-quality preview")
+    parser.add_argument(
+        "--workers",
+        type=int,
+        default=None,
+        help=f"parallel browsers (default {default_workers()})",
+    )
+    parser.add_argument("--no-cache", action="store_true", help="re-render every scene")
     parser.add_argument("--check", action="store_true", help="validate the script and exit")
     parser.add_argument("--speak", action="store_true", help="print the spoken text and exit")
     args = parser.parse_args(argv)
@@ -38,9 +48,16 @@ def main(argv=None):
     if any(issue.level == "error" for issue in issues):
         return 1
 
+    try:
+        numbers = parse_selection(args.scenes, len(scenes))
+    except ValueError as error:
+        print(error)
+        return 1
+
     if args.speak:
         lexicon = load_lexicon(config["lexicon"])
-        for number, scene in enumerate(scenes, start=1):
+        for number in numbers:
+            scene = scenes[number - 1]
             if scene["audio"]:
                 print(f"{number}. [recorded audio] {scene['audio']}")
             else:
@@ -51,7 +68,16 @@ def main(argv=None):
         return 0
 
     started = time.time()
-    results = render_script(args.script, args.format, args.output_dir, _progress)
+    results = render_script(
+        args.script,
+        args.format,
+        args.output_dir,
+        _progress,
+        scenes_spec=args.scenes,
+        draft=args.draft,
+        workers=args.workers,
+        use_cache=not args.no_cache,
+    )
     print(f"render time: {(time.time() - started) / 60:.1f} min")
     for name, path in results.items():
         print(f"saved ({name}): {path}")

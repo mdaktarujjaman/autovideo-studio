@@ -1,250 +1,296 @@
 <!doctype html>
 <html>
-<head>
-<meta charset="utf-8">
-<style>
-@font-face { font-family: "Main"; src: url("__FONT__"); font-weight: 100 900; }
-* { box-sizing: border-box; }
-html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; }
-body {
-  display: flex;
-  flex-direction: column;
-  font-family: "Main", sans-serif;
-  color: #fff;
-  background: #000;
-}
-.bg { position: absolute; inset: 0; z-index: 0; }
-.dim { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.5); }
-.stage {
-  position: relative;
-  z-index: 1;
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 5vmin;
-  padding: 6vmin;
-  text-align: center;
-}
-.anim { animation: rise 0.7s ease-out both; }
-.pop { animation: pop 0.45s cubic-bezier(0.2, 1.6, 0.4, 1) both; }
-@keyframes rise {
-  from { opacity: 0; transform: translateY(5vmin); }
-  to { opacity: 1; transform: translateY(0); }
-}
-@keyframes pop {
-  from { opacity: 0; transform: scale(0.2); }
-  to { opacity: 1; transform: scale(1); }
-}
-.headline {
-  font-size: 8vmin;
-  font-weight: 500;
-  line-height: 1.45;
-  max-width: min(90%, 150vmin);
-  text-wrap: balance;
-}
-.badge {
-  display: flex;
-  align-items: baseline;
-  gap: 3vmin;
-  padding: 2vmin 6vmin;
-  border: 0.6vmin solid #ff5a5a;
-  border-radius: 3vmin;
-  background: rgba(255, 90, 90, 0.12);
-}
-.num { font-size: 18vmin; font-weight: 700; color: #ff5a5a; }
-.lab { font-size: 6vmin; color: #ddd; }
-.icons {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 1.5vmin;
-  width: min(92%, 130vmin);
-}
-.icon { width: 7vmin; }
-.icon svg { width: 100%; display: block; }
-.items {
-  display: flex;
-  flex-direction: column;
-  gap: 3.5vmin;
-  width: min(90%, 130vmin);
-}
-.item {
-  padding: 3.5vmin 5vmin;
-  font-size: 6.4vmin;
-  font-weight: 600;
-  text-align: left;
-  background: rgba(255, 255, 255, 0.1);
-  border-left: 1.2vmin solid #f5c542;
-  border-radius: 2.5vmin;
-}
-.caption-wrap {
-  position: relative;
-  z-index: 1;
-  flex: none;
-  display: flex;
-  justify-content: center;
-  margin-bottom: 14vmin;
-}
-.caption-wrap:empty { display: none; }
-.caption {
-  max-width: min(88%, 150vmin);
-  padding: 3vmin 5vmin;
-  font-size: 5.6vmin;
-  font-weight: 600;
-  line-height: 1.5;
-  color: #111;
-  background: #fff;
-  border-radius: 3vmin;
-  text-align: center;
-  text-wrap: balance;
-}
-.track, .bar {
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  width: 100%;
-  height: 1vmin;
-  z-index: 2;
-}
-.track { background: rgba(255, 255, 255, 0.14); }
-.bar { background: #f5c542; transform-origin: left center; }
-body::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  opacity: 0.06;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
-}
-@media (orientation: landscape) {
-  .caption-wrap { margin-bottom: 8vmin; }
-}
-</style>
-</head>
-<body>
-<div class="dim" id="dim"></div>
-<div class="stage" id="stage"></div>
-<div class="caption-wrap" id="captionWrap"></div>
-<div class="track"></div>
-<div class="bar" id="bar"></div>
-<script>
-const S = __SCENE__;
-const BN = "০১২৩৪৫৬৭৮৯";
-const PERSON = '<svg viewBox="0 0 40 70"><circle cx="20" cy="14" r="11" fill="#c9a064"/><rect x="6" y="28" width="28" height="42" rx="10" fill="#d9b27a"/></svg>';
-const DOT = '<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" fill="#f5c542"/></svg>';
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      @font-face {
+        font-family: "Main";
+        src: url("__FONT__");
+        font-weight: 100 900;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+      body {
+        display: flex;
+        flex-direction: column;
+        font-family: "Main", sans-serif;
+        color: #fff;
+        background: #000;
+      }
+      .bg {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+      }
+      .dim {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+      }
+      .stage {
+        position: relative;
+        z-index: 1;
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 5vmin;
+        padding: 6vmin;
+        text-align: center;
+      }
+      .anim {
+        animation: rise 0.7s ease-out both;
+      }
+      .pop {
+        animation: pop 0.45s cubic-bezier(0.2, 1.6, 0.4, 1) both;
+      }
+      @keyframes rise {
+        from {
+          opacity: 0;
+          transform: translateY(5vmin);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      @keyframes pop {
+        from {
+          opacity: 0;
+          transform: scale(0.2);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+      .headline {
+        font-size: 8vmin;
+        font-weight: 500;
+        line-height: 1.45;
+        max-width: min(90%, 150vmin);
+        text-wrap: balance;
+      }
+      .badge {
+        display: flex;
+        align-items: baseline;
+        gap: 3vmin;
+        padding: 2vmin 6vmin;
+        border: 0.6vmin solid #ff5a5a;
+        border-radius: 3vmin;
+        background: rgba(255, 90, 90, 0.12);
+      }
+      .num {
+        font-size: 18vmin;
+        font-weight: 700;
+        color: #ff5a5a;
+      }
+      .lab {
+        font-size: 6vmin;
+        color: #ddd;
+      }
+      .icons {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 1.5vmin;
+        width: min(92%, 130vmin);
+      }
+      .icon {
+        width: 7vmin;
+      }
+      .icon svg {
+        width: 100%;
+        display: block;
+      }
+      .items {
+        display: flex;
+        flex-direction: column;
+        gap: 3.5vmin;
+        width: min(90%, 130vmin);
+      }
+      .item {
+        padding: 3.5vmin 5vmin;
+        font-size: 6.4vmin;
+        font-weight: 600;
+        text-align: left;
+        background: rgba(255, 255, 255, 0.1);
+        border-left: 1.2vmin solid #f5c542;
+        border-radius: 2.5vmin;
+      }
+      .caption-wrap {
+        position: relative;
+        z-index: 1;
+        flex: none;
+        display: flex;
+        justify-content: center;
+        margin-bottom: 14vmin;
+      }
+      .caption-wrap:empty {
+        display: none;
+      }
+      .caption {
+        max-width: min(88%, 150vmin);
+        padding: 3vmin 5vmin;
+        font-size: 5.6vmin;
+        font-weight: 600;
+        line-height: 1.5;
+        color: #111;
+        background: #fff;
+        border-radius: 3vmin;
+        text-align: center;
+        text-wrap: balance;
+      }
 
-const ms = (S.duration || 5) * 1000;
-const idle = [];
+      body::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+        opacity: 0.06;
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+      }
+      @media (orientation: landscape) {
+        .caption-wrap {
+          margin-bottom: 8vmin;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="dim" id="dim"></div>
+    <div class="stage" id="stage"></div>
+    <div class="caption-wrap" id="captionWrap"></div>
+    <script>
+      const S = __SCENE__;
+      const BN = "০১২৩৪৫৬৭৮৯";
+      const PERSON =
+        '<svg viewBox="0 0 40 70"><circle cx="20" cy="14" r="11" fill="#c9a064"/><rect x="6" y="28" width="28" height="42" rx="10" fill="#d9b27a"/></svg>';
+      const DOT =
+        '<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" fill="#f5c542"/></svg>';
 
-const toBn = n => String(n).replace(/\d/g, d => BN[d]);
+      const ms = (S.duration || 5) * 1000;
+      const idle = [];
 
-function el(tag, cls, text) {
-  const node = document.createElement(tag);
-  if (cls) node.className = cls;
-  if (text !== undefined) node.textContent = text;
-  return node;
-}
+      const toBn = (n) => String(n).replace(/\d/g, (d) => BN[d]);
 
-const bg = el("div", "bg");
-bg.style.background = S.bg;
-document.body.prepend(bg);
-idle.push(
-  bg.animate(
-    [{ transform: "scale(1)" }, { transform: "scale(1.08)" }],
-    { duration: ms, easing: "linear", fill: "both" }
-  )
-);
+      function el(tag, cls, text) {
+        const node = document.createElement(tag);
+        if (cls) node.className = cls;
+        if (text !== undefined) node.textContent = text;
+        return node;
+      }
 
-document.getElementById("dim").style.display = S.dim ? "block" : "none";
+      const bg = el("div", "bg");
+      bg.style.background = S.bg;
+      document.body.prepend(bg);
+      idle.push(
+        bg.animate([{ transform: "scale(1)" }, { transform: "scale(1.08)" }], {
+          duration: ms,
+          easing: "linear",
+          fill: "both",
+        }),
+      );
 
-const stage = document.getElementById("stage");
-idle.push(
-  stage.animate(
-    [{ transform: "translateY(-0.8vmin)" }, { transform: "translateY(0.8vmin)" }],
-    { duration: 4000, iterations: Infinity, direction: "alternate", easing: "ease-in-out" }
-  )
-);
+      document.getElementById("dim").style.display = S.dim ? "block" : "none";
 
-const bar = document.getElementById("bar");
-idle.push(
-  bar.animate(
-    [
-      { transform: `scaleX(${S.progressFrom})` },
-      { transform: `scaleX(${S.progressTo})` },
-    ],
-    { duration: ms, easing: "linear", fill: "both" }
-  )
-);
+      const stage = document.getElementById("stage");
+      idle.push(
+        stage.animate(
+          [
+            { transform: "translateY(-0.8vmin)" },
+            { transform: "translateY(0.8vmin)" },
+          ],
+          {
+            duration: 4000,
+            iterations: Infinity,
+            direction: "alternate",
+            easing: "ease-in-out",
+          },
+        ),
+      );
 
-let counter = null;
-let countMs = 0;
-const target = parseInt(S.value, 10) || 0;
+      let counter = null;
+      let countMs = 0;
+      const target = parseInt(S.value, 10) || 0;
 
-if (S.type === "counter") {
-  countMs = Math.min(3000, Math.max(1200, ms * 0.4));
-  const badge = el("div", "badge anim");
-  counter = el("span", "num", toBn(0));
-  badge.append(counter, el("span", "lab", S.label));
-  stage.append(badge);
+      if (S.type === "counter") {
+        countMs = Math.min(3000, Math.max(1200, ms * 0.4));
+        const badge = el("div", "badge anim");
+        counter = el("span", "num", toBn(0));
+        badge.append(counter, el("span", "lab", S.label));
+        stage.append(badge);
 
-  if (S.icon !== "none") {
-    const icons = el("div", "icons");
-    const count = Math.min(target, 40);
-    const span = Math.max(700, ms * 0.5);
-    const gap = Math.min(90, span / Math.max(count, 1));
-    for (let i = 0; i < count; i++) {
-      const icon = el("div", "icon pop");
-      icon.style.animationDelay = (700 + i * gap) + "ms";
-      icon.innerHTML = S.icon === "dot" ? DOT : PERSON;
-      icons.append(icon);
-    }
-    stage.append(icons);
-  }
-} else if (S.type === "bullets") {
-  const list = el("div", "items");
-  const texts = S.items.split("|").map(t => t.trim()).filter(Boolean);
-  const step = Math.max(600 * texts.length, ms * 0.6) / texts.length;
-  texts.forEach((text, i) => {
-    const item = el("div", "item anim", text);
-    item.style.animationDelay = (300 + i * step) + "ms";
-    list.append(item);
-  });
-  stage.append(list);
-} else {
-  stage.append(el("div", "headline anim", S.text));
-}
+        if (S.icon !== "none") {
+          const icons = el("div", "icons");
+          const count = Math.min(target, 40);
+          const span = Math.max(700, ms * 0.5);
+          const gap = Math.min(90, span / Math.max(count, 1));
+          for (let i = 0; i < count; i++) {
+            const icon = el("div", "icon pop");
+            icon.style.animationDelay = 700 + i * gap + "ms";
+            icon.innerHTML = S.icon === "dot" ? DOT : PERSON;
+            icons.append(icon);
+          }
+          stage.append(icons);
+        }
+      } else if (S.type === "bullets") {
+        const list = el("div", "items");
+        const texts = S.items
+          .split("|")
+          .map((t) => t.trim())
+          .filter(Boolean);
+        const step = Math.max(600 * texts.length, ms * 0.6) / texts.length;
+        texts.forEach((text, i) => {
+          const item = el("div", "item anim", text);
+          item.style.animationDelay = 300 + i * step + "ms";
+          list.append(item);
+        });
+        stage.append(list);
+      } else {
+        stage.append(el("div", "headline anim", S.text));
+      }
 
-if (S.type !== "text") {
-  document.getElementById("captionWrap").append(el("div", "caption anim", S.text));
-}
+      if (S.type !== "text") {
+        document
+          .getElementById("captionWrap")
+          .append(el("div", "caption anim", S.text));
+      }
 
-window.activeUntil = Math.max(
-  counter ? 300 + countMs : 0,
-  ...document
-    .getAnimations()
-    .filter(a => !idle.includes(a))
-    .map(a => a.effect.getComputedTiming().endTime)
-);
+      window.activeUntil = Math.max(
+        counter ? 300 + countMs : 0,
+        ...document
+          .getAnimations()
+          .filter((a) => !idle.includes(a))
+          .map((a) => a.effect.getComputedTiming().endTime),
+      );
 
-window.onSeek = t => {
-  if (!counter) return;
-  const progress = Math.min(1, Math.max(0, (t - 300) / countMs));
-  counter.textContent = toBn(Math.round(target * progress));
-};
+      window.onSeek = (t) => {
+        if (!counter) return;
+        const progress = Math.min(1, Math.max(0, (t - 300) / countMs));
+        counter.textContent = toBn(Math.round(target * progress));
+      };
 
-window.seek = t => {
-  document.getAnimations().forEach(a => {
-    a.pause();
-    a.currentTime = t;
-  });
-  window.onSeek(t);
-};
+      window.seek = (t) => {
+        document.getAnimations().forEach((a) => {
+          a.pause();
+          a.currentTime = t;
+        });
+        window.onSeek(t);
+      };
 
-window.seek(0);
-</script>
-</body>
+      window.seek(0);
+    </script>
+  </body>
 </html>
