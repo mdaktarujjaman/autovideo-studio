@@ -1,3 +1,4 @@
+import sys
 import argparse
 import time
 from pathlib import Path
@@ -18,6 +19,7 @@ def _progress(stage, done, total):
 
 
 def main(argv=None):
+    sys.stdout.reconfigure(encoding="utf-8")
     parser = argparse.ArgumentParser(
         prog="autovideo", description="Turn a script file into an animated MP4"
     )
@@ -71,16 +73,21 @@ def main(argv=None):
         return 0
 
     started = time.time()
-    results = render_script(
-        args.script,
-        args.format,
-        args.output_dir,
-        _progress,
-        scenes_spec=args.scenes,
-        draft=args.draft,
-        workers=args.workers,
-        use_cache=not args.no_cache,
-    )
+    try:
+        results = render_script(
+            args.script,
+            args.format,
+            args.output_dir,
+            _progress,
+            scenes_spec=args.scenes,
+            draft=args.draft,
+            workers=args.workers,
+            use_cache=not args.no_cache,
+        )
+    except RuntimeError as error:
+        print(error)
+        return 1
+
     print(f"render time: {(time.time() - started) / 60:.1f} min")
     for name, path in results.items():
         print(f"saved ({name}): {path}")

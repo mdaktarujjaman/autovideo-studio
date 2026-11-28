@@ -91,12 +91,16 @@ def validate(config, scenes):
                     add("warning", number, f"item is long ({len(item)} chars): {item[:20]}")
 
         text = spoken(scene)
+        if re.search(r"à[¦§]", scene["text"]):
+            add("error", number, "text looks garbled, save the script as UTF-8")
         word_count = len(text.split())
         if word_count > MAX_WORDS:
             add("warning", number, f"voiceover has {word_count} words, split the scene")
 
         if not scene["audio"]:
             prepared = prepare_speech(text, lexicon)
+            if not re.search(r"\w", prepared):
+                add("error", number, "nothing to speak in this scene")
             leftover = sorted(set(re.findall(r"[A-Za-z][A-Za-z0-9]*", prepared)))
             if leftover:
                 add("warning", number, "add to lexicon.json: " + ", ".join(leftover))

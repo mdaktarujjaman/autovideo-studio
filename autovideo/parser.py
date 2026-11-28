@@ -30,7 +30,7 @@ SCENE_DEFAULTS = {
 
 
 def parse(path):
-    text = Path(path).read_text(encoding="utf-8")
+    text = Path(path).read_text(encoding="utf-8-sig")
     config = dict(DEFAULTS)
     scenes = []
 

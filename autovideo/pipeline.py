@@ -88,7 +88,14 @@ def render_script(
 
     voices = []
     for position, scene in enumerate(scenes):
-        voices.append(voice_for(scene, config, lexicon))
+        try:
+            voices.append(voice_for(scene, config, lexicon))
+        except Exception as error:
+            number = indexes[position] + 1
+            spoken = prepare_speech(scene["say"] or scene["text"], lexicon)
+            raise RuntimeError(
+                f"voice failed for scene {number}: {spoken[:70]!r} ({error})"
+            ) from error
         notify("voice", position + 1, len(scenes))
 
     durations = []

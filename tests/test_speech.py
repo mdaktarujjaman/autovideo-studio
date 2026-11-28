@@ -61,3 +61,13 @@ def test_unknown_english_word_warns(tmp_path):
     config = base_config(tmp_path, lexicon="")
     issues = validate(config, [scene("WordPress দিয়ে।")])
     assert [(issue.level, issue.scene) for issue in issues] == [("warning", 1)]
+    
+    
+def test_empty_voiceover_is_error(tmp_path):
+    issues = validate(base_config(tmp_path), [scene("?!")])
+    assert ("error", 1) in [(issue.level, issue.scene) for issue in issues]
+    
+def test_garbled_text_is_error(tmp_path):
+    garbled = "মৃত্যুদণ্ড".encode("utf-8").decode("cp1252", errors="replace")
+    issues = validate(base_config(tmp_path), [scene(garbled)])
+    assert ("error", 1) in [(issue.level, issue.scene) for issue in issues]

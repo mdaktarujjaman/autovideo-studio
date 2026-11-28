@@ -25,13 +25,21 @@ TRIM = (
 
 
 async def _save(text, voice, rate, pitch, path):
-    communicate = edge_tts.Communicate(text, voice=voice, rate=rate, pitch=pitch)
-    await communicate.save(str(path))
+    last = None
+    for attempt in range(3):
+        try:
+            communicate = edge_tts.Communicate(text, voice=voice, rate=rate, pitch=pitch)
+            await communicate.save(str(path))
+            return
+        except Exception as error:
+            last = error
+            await asyncio.sleep(1.5 * (attempt + 1))
+    raise last
 
 
 def _sentences(text):
     parts = re.split(r"(?<=[।?!])\s+", text.strip())
-    return [part for part in parts if part]
+    return [part for part in parts if re.search(r"\w", part)]
 
 
 def _ffmpeg(args):
