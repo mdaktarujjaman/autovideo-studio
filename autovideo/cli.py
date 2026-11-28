@@ -10,8 +10,11 @@ from .speech import prepare_speech
 from .validator import estimate_seconds, validate
 
 
+_started = time.time()
+
+
 def _progress(stage, done, total):
-    print(f"{stage}: {done}/{total}", flush=True)
+    print(f"{stage}: {done}/{total}  ({time.time() - _started:.0f}s)", flush=True)
 
 
 def main(argv=None):
