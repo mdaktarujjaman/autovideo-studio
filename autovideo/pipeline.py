@@ -113,10 +113,11 @@ def render_script(
     names = list(SIZES) if mode == "both" else [mode]
     results = {}
     for name in names:
+        size = scaled(SIZES[name], quality["scale"])
         sequences = render_scenes(
             scenes,
             durations,
-            scaled(SIZES[name], quality["scale"]),
+            size,
             config["font"],
             fps,
             progress=lambda done, total, n=name: notify(f"render-{n}", done, total),
@@ -126,17 +127,17 @@ def render_script(
             indexes=indexes,
         )
         target = target_dir / f"{Path(script_path).stem}{suffix}_{name}.mp4"
-        notify(f"encode-{name}", 0, 1)
         build_video(
             sequences,
             voices,
             target,
             fps,
-            config["music"],
+            size,
+            music=config["music"],
             crf=quality["crf"],
             preset=quality["preset"],
+            progress=lambda done, total, n=name: notify(f"encode-{n}", done, total),
         )
-        notify(f"encode-{name}", 1, 1)
         results[name] = target
 
     return results
